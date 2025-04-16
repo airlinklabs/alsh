@@ -5,12 +5,25 @@ const path = require('path');
 const process = require('process');
 const { v4: uuidv4 } = require('uuid');
 
-const PASSWORD = process.env.PASSWORD || 'secret';
-const ID = uuidv4();
+let PASSWORD = 'secret';
+try {
+  const passwordFilePath = '/app/data/airlink/password.txt';
+  PASSWORD = fs.readFileSync(passwordFilePath, 'utf8').trim();
+} catch (err) {
+  console.warn(`[WARN] Failed to read password from file. Using default password. Error: ${err.message}`);
+}
 
 const idFilePath = '/app/data/airlink/alshid.txt';
 fs.mkdirSync(path.dirname(idFilePath), { recursive: true });
-fs.writeFileSync(idFilePath, ID);
+
+let ID;
+
+if (fs.existsSync(idFilePath)) {
+  ID = fs.readFileSync(idFilePath, 'utf8').trim();
+} else {
+  ID = uuidv4();
+  fs.writeFileSync(idFilePath, ID);
+}
 
 const WS_URL = 'wss://alsh.airlinklabs.xyz';
 let shell;
